@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Cadastro de Usuário</title>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Cadastro de Usuário</h2>
+        <form action="/register" method="POST" class="form-container">
+
+        <label for="username">Nome de usuário:</label>
+        <input type="text" id="username" name="username" required>
+
+        <label for="fullname">Nome completo:</label>
+        <input type="text" id="fullname" name="fullname" required>
+
+        <label for="email">E-mail:</label>
+        <input type="email" id="email" name="email" required>
+
+        <label for="password">Senha:</label>
+        <input type="password" id="password" name="password" required>
+
+        <label for="role">Permissão:</label>
+        <select id="role" name="role" required>
+            <option value="A">Administrador</option>
+            <option value="C">Convencional</option>
+        </select>
+
+    <button type="submit">Cadastrar</button>
+</form>
+
+    </div>
+</body>
+</html>
