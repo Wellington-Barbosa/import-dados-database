@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_dashboard.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <title>Home - Rio Verde</title>
+</head>
+<body>
+    <header>
+        <div class="user-info">
+            <span>Bem-vindo, {{ username }}</span>
+            <button id="menu-toggle">Menu</button> <!-- Botão para alternar o menu lateral -->
+        </div>
+    </header>
+    <aside class="sidebar">
+        <nav>
+            <ul>
+                <!-- Exibição do menu com base na permissão do usuário -->
+                {% if user_permission == 'A' %}
+                    <li><a href="#">Administrador</a></li>
+                    <li><a href="#">Configurações</a></li>
+                {% endif %}
+                <li><a href="#">Contabilidade</a></li>
+                <li><a href="#">Financeiro</a></li>
+                <li><a href="#">Suprimentos</a></li>
+                <li><a href="#">TI</a></li>
+                <li><a href="#">Vivi IA</a></li>
+                <li><form action="{{ url_for('logout') }}" method="post" onsubmit="return confirmLogout()">
+                    <button id="logout-btn" type="submit">Logout</button>
+                </form></li>
+            </ul>
+        </nav>
+    </aside>
+    <main>
+        <!-- Conteúdo do dashboard aqui -->
+    </main>
+    <script>
+        function confirmLogout() {
+            return confirm('Você realmente deseja sair do sistema?');
+        }
+    </script>
+</body>
+</html>

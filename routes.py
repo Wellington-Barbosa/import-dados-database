@@ -1,8 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 import oracledb
 import hashlib
-import bcrypt
-import os
 
 # Habilita o modo thick, necessário para suportar versões antigas do Oracle Database
 oracledb.init_oracle_client(lib_dir=r"C:\instantclient_23_4")  # Altere para o caminho correto do Instant Client
@@ -51,46 +49,49 @@ def init_routes(app):
             return redirect('/success')
         return render_template('register.html')
 
-from flask import render_template, request, redirect, url_for, flash
-import hashlib
-import oracledb
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        if request.method == 'POST':
+            username = request.form['username']
+            password = request.form['password']
 
-# Função para validar o login
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+            # Criptografar a senha para comparar com a armazenada no banco
+            hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
-        # Criptografar a senha para comparar com a armazenada no banco
-        hashed_password = hashlib.sha256(password.encode()).hexdigest()
+            # Conectar ao banco e verificar se o usuário existe
+            conn = db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT DS_SENHA, IE_PERMISSAO FROM SIS_UNIMED_WB WHERE NN_USUARIO = :username", [username])
+            result = cursor.fetchone()
 
-        # Conectar ao banco e verificar se o usuário existe
-        conn = db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT DS_SENHA, IE_PERMISSAO FROM SIS_UNIMED_WB WHERE NN_USUARIO = :username", [username])
-        result = cursor.fetchone()
+            if result and result[0] == hashed_password:
+                # Verificar o tipo de usuário (Administrador ou Convencional)
+                user_permission = result[1]
+                flash('Login efetuado com sucesso!', 'success')
 
-        if result and result[0] == hashed_password:
-            # Verificar o tipo de usuário (Administrador ou Convencional)
-            user_permission = result[1]
-            flash('Login efetuado com sucesso!', 'success')
+                # Armazenar informações na sessão
+                session['username'] = username
+                session['user_permission'] = user_permission
 
-            # Redirecionar conforme a permissão
-            if user_permission == 'A':
-                return redirect(url_for('admin_dashboard'))
+                # Redirecionar para a página de dashboard
+                return redirect(url_for('dashboard'))
             else:
-                return redirect(url_for('user_dashboard'))
+                flash('Usuário ou senha inválidos', 'danger')
+
+        return render_template('index.html')
+
+    @app.route('/dashboard')
+    def dashboard():
+        # Verificação de login e permissões
+        if 'username' in session:
+            username = session['username']
+            user_permission = session.get('user_permission', 'C')  # Padrão para usuário convencional
+            return render_template('dashboard.html', username=username, user_permission=user_permission)
         else:
-            flash('Usuário ou senha inválidos', 'danger')
+            return redirect(url_for('login'))
 
-    return render_template('index.html')
-
-# Páginas de dashboard
-@app.route('/admin_dashboard')
-def admin_dashboard():
-    return render_template('admin_dashboard.html')
-
-@app.route('/user_dashboard')
-def user_dashboard():
-    return render_template('user_dashboard.html')
+    @app.route('/logout', methods=['POST'])
+    def logout():
+        session.clear()  # Limpar sessão do usuário
+        flash('Logout realizado com sucesso!', 'success')
+        return redirect(url_for('login'))
